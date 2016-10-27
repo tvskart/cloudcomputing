@@ -8,7 +8,7 @@
     "clean": "rm -rf build && mkdir build",
     "build-server": "babel -d ./build ./src -s",
     "build": "npm run clean && npm run build-server",
-    "start": "npm run build && node ./build/server.js",
+    "start": "node ./build/server.js",
     "server": "npm run start",
     "debug": "node --debug ./build/server.js",
     "load-env": "node load-env.js"
