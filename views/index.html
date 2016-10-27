@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<head>
+	<title>Twitter Streaming Using Node</title>
+	<script src="../socket.io/socket.io.js"></script>
+  
+	<!-- Google Maps -->
+	<link href="https://google-developers.appspot.com/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
+	<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=visualization"></script>
+</head>
+
+<body onload="initialize()">
+	<div class="container">
+		<div id="map_canvas"></div>
+	</div>
+    <script type="text/javascript">
+        console.log('client side log');
+        function initialize() {
+            if(io !== undefined) {
+                // Storage for WebSocket connections
+                var socket = io.connect('/');
+
+                // This listens on the "tweet" channel and data is 
+                // received everytime a new tweet is receieved.
+                socket.on('tweet', function (data) {
+                    //Add tweet to the heat map array.
+                    console.log('client side tweet', data);
+                });
+
+                // Listens for a success response from the server to 
+                // say the connection was successful.
+                socket.on("server connected", function(r) {
+
+                    //Now that we are connected to the server let's tell 
+                    //the server we are ready to start receiving tweets.
+                    socket.emit("start stream");
+                });            
+            }
+        }
+    </script>
+</body>
+</html>
