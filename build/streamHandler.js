@@ -12,7 +12,33 @@ var _fs = require('fs');
 
 var _fs2 = _interopRequireDefault(_fs);
 
+var _elasticHandler = require('./elasticHandler');
+
+var _elasticHandler2 = _interopRequireDefault(_elasticHandler);
+
+var _elasticsearch = require('elasticsearch');
+
+var _elasticsearch2 = _interopRequireDefault(_elasticsearch);
+
+var _config = require('./config');
+
+var _config2 = _interopRequireDefault(_config);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var elastic_client = new _elasticsearch2.default.Client({
+    hosts: [{
+        protocol: 'https',
+        host: _config2.default.es.host,
+        port: 443
+    }
+    // ,
+    // {
+    //     host: 'localhost',
+    //     port: 9200
+    // }
+    ]
+});
 
 //Handles the twitter stream data, and socket io obj avail
 module.exports = function (stream, io) {
@@ -35,18 +61,22 @@ module.exports = function (stream, io) {
         console.log(tweet);
         // if (tweet.loc_lat && tweet.loc_lon) console.log(tweet);
 
-        var tweetEntry = new _Tweet2.default(tweet);
+        // let tweetEntry = new Tweet(tweet);
         // Save 'er to the database
-        tweetEntry.save(function (err) {
-            if (!err) {
-                // If everything is cool, socket.io emits the tweet.
-                console.log('tweet saved');
-                //io.broadcast.emit('tweet', tweet);
-                io.emit('tweet', tweet);
-                //Write to File
-                // writableStream.write(tweet.body);
-            }
-        });
+        if (tweet.loc_lat && tweet.loc_lon || tweet.loc_name) {
+            io.emit('tweet', tweet);
+            (0, _elasticHandler2.default)(elastic_client, io, tweet);
+            // tweetEntry.save(function(err) {
+            //     if (!err) {
+            //         // If everything is cool, socket.io emits the tweet.
+            //         console.log('tweet saved');
+            //         //io.broadcast.emit('tweet', tweet);
+            //         io.emit('tweet', tweet);
+            //         //Write to File
+            //         // writableStream.write(tweet.body);
+            //     }
+            // });
+        }
     });
 };
 //# sourceMappingURL=streamHandler.js.map

@@ -38,9 +38,9 @@ const io = require('socket.io').listen(server);
 io.on('connection', function (socket) {
     socket.emit('server connected');
     socket.on('start stream', function (data) {
-        elasticHandler(elastic_client, io, {});
+        // elasticHandler(elastic_client, io, {});
         if (stream === null) {
-            // runStream();
+            runStream();
         }
     });
 });
@@ -54,12 +54,12 @@ let runStream = () => {
             return console.log(limitMessage);
         });
         stream.on('end', (response) => {
-            setTimeout(runStream, 5000);
+            setTimeout(runStream, 60000);
         });
         stream.on('error', function(error) {
             console.log(error);
             stream.destroy();
-            setTimeout(runStream, 5000);
+            setTimeout(runStream, 60000);
         });
         stream.on('destroy', (response) => {
             console.log('silently destroyed connection');
@@ -78,19 +78,20 @@ let runStream = () => {
 //runStream();
 
 //Elastic Search Code
-const elastic_client = new elasticsearch.Client({
-    hosts: [
-        {
-            protocol: 'https',
-            host: config.es.host,
-            port: 443
-        },
-        {
-            host: 'localhost',
-            port: 9200
-        }
-    ]
-});
+// const elastic_client = new elasticsearch.Client({
+//     hosts: [
+//         {
+//             protocol: 'https',
+//             host: config.es.host,
+//             port: 443
+//         }
+//         // ,
+//         // {
+//         //     host: 'localhost',
+//         //     port: 9200
+//         // }
+//     ]
+// });
 
 // elastic_client.cluster.health({},function(err,resp,status) {  
 //   console.log("-- Client Health --",resp);

@@ -1,6 +1,24 @@
 import Tweet from './models/Tweet';
 import _ from 'lodash';
 import fs from 'fs';
+import elasticHandler from './elasticHandler';
+import elasticsearch from 'elasticsearch';
+import config from './config';
+
+const elastic_client = new elasticsearch.Client({
+    hosts: [
+        {
+            protocol: 'https',
+            host: config.es.host,
+            port: 443
+        }
+        // ,
+        // {
+        //     host: 'localhost',
+        //     port: 9200
+        // }
+    ]
+});
 
 //Handles the twitter stream data, and socket io obj avail
 module.exports = function(stream, io) {
@@ -23,17 +41,21 @@ module.exports = function(stream, io) {
         console.log(tweet);
         // if (tweet.loc_lat && tweet.loc_lon) console.log(tweet);
 
-        let tweetEntry = new Tweet(tweet);
+        // let tweetEntry = new Tweet(tweet);
         // Save 'er to the database
-        tweetEntry.save(function(err) {
-            if (!err) {
-                // If everything is cool, socket.io emits the tweet.
-                console.log('tweet saved');
-                //io.broadcast.emit('tweet', tweet);
-                io.emit('tweet', tweet);
-                //Write to File
-                // writableStream.write(tweet.body);
-            }
-        });
+        if ((tweet.loc_lat && tweet.loc_lon) || tweet.loc_name) {
+            io.emit('tweet', tweet);
+            elasticHandler(elastic_client, io, tweet);
+            // tweetEntry.save(function(err) {
+            //     if (!err) {
+            //         // If everything is cool, socket.io emits the tweet.
+            //         console.log('tweet saved');
+            //         //io.broadcast.emit('tweet', tweet);
+            //         io.emit('tweet', tweet);
+            //         //Write to File
+            //         // writableStream.write(tweet.body);
+            //     }
+            // });
+        }
     });
 };
