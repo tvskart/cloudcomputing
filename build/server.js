@@ -32,9 +32,13 @@ var _elasticHandler = require('./elasticHandler');
 
 var _elasticHandler2 = _interopRequireDefault(_elasticHandler);
 
-var _swig = require('swig');
+var _elasticHandlerSearch = require('./elasticHandlerSearch');
 
-var _swig2 = _interopRequireDefault(_swig);
+var _elasticHandlerSearch2 = _interopRequireDefault(_elasticHandlerSearch);
+
+var _ejs = require('ejs');
+
+var _ejs2 = _interopRequireDefault(_ejs);
 
 var _elasticsearch = require('elasticsearch');
 
@@ -47,26 +51,30 @@ var _fs2 = _interopRequireDefault(_fs);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 //Express instance constant
-
-// import twitter from 'ntwitter'; //old twitter node pkg..
 var app = (0, _express2.default)();
 
 // import _ from 'lodash';
+// import swig from 'swig';
+
+// import twitter from 'ntwitter'; //old twitter node pkg..
 
 var port = process.env.PORT || 8080;
-app.engine('html', _swig2.default.renderFile);
-app.set('view engine', 'html');
+// app.engine('html', swig.renderFile);
+app.set('view engine', 'ejs');
 
 //connecting to mongoDB
 // mongoose.connect('mongodb://localhost/react-tweets');
 
 var twit = new _twitter2.default(_config2.default.twitter2);
 var stream = null;
-//Mininal route handling.. Callback function is stored in routes
-app.get('/', _routes2.default.index);
-//setting location of static files, app has access now
-// console.log(__dirname);
-app.use('/', _express2.default.static(__dirname + "../public/"));
+
+var elastic_client = new _elasticsearch2.default.Client({
+    hosts: [{
+        protocol: 'https',
+        host: _config2.default.es.host,
+        port: 443
+    }]
+});
 
 //start server, its running
 var server = app.listen(port);
@@ -81,6 +89,33 @@ io.on('connection', function (socket) {
         }
     });
 });
+
+//Mininal route handling.. Callback function is stored in routes
+app.get('/', function (req, res) {
+    // res.render('index');
+    // Tweet.getTweets(0, function(tweets) {
+    //     res.send(tweets);
+    // });
+    var search_term = '';
+    var tweets = _elasticHandlerSearch2.default.ESSearch(elastic_client, io, search_term, function (tweets) {
+        console.log('route callback', tweets.length);
+        res.render('index', {
+            tweets: tweets
+        });
+    });
+});
+
+app.get('/search', function (req, res) {
+    var search_term = req.query.search_term || '';
+    var tweets = _elasticHandlerSearch2.default.ESSearch(elastic_client, io, search_term, function (tweets) {
+        console.log('route callback', search_term, tweets.length);
+        res.json(tweets);
+    });
+});
+
+//setting location of static files, app has access now
+// console.log(__dirname);
+app.use('/', _express2.default.static(__dirname + "../public/"));
 
 //define stream api, bounding box, handler to process it and store in DB, etc
 var runStream = function runStream() {

@@ -21,6 +21,7 @@
     "babel-preset-react": "^6.16.0",
     "csvtojson": "^1.0.3",
     "dotenv": "^2.0.0",
+    "ejs": "^2.5.2",
     "elasticsearch": "^11.0.1",
     "express": "^4.14.0",
     "get-json": "0.0.3",

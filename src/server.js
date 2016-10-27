@@ -8,28 +8,35 @@ import config from './config';
 import routes from './routes';
 import streamHandler from './streamHandler';
 import elasticHandler from './elasticHandler';
+import ESH from './elasticHandlerSearch';
 
 // import _ from 'lodash';
-import swig from 'swig';
+// import swig from 'swig';
+import ejs from 'ejs';
 import elasticsearch from 'elasticsearch';
 import fs from 'fs';
 
 //Express instance constant
 const app = express();
 const port = process.env.PORT || 8080;
-app.engine('html', swig.renderFile);
-app.set('view engine', 'html');
+// app.engine('html', swig.renderFile);
+app.set('view engine', 'ejs');
 
 //connecting to mongoDB
 // mongoose.connect('mongodb://localhost/react-tweets');
 
 const twit = new Twitter(config.twitter2);
 let stream = null;
-//Mininal route handling.. Callback function is stored in routes
-app.get('/', routes.index);
-//setting location of static files, app has access now
-// console.log(__dirname);
-app.use('/', express.static(__dirname + "../public/"));
+
+const elastic_client = new elasticsearch.Client({
+    hosts: [
+        {
+            protocol: 'https',
+            host: config.es.host,
+            port: 443
+        }
+    ]
+});
 
 //start server, its running
 const server = app.listen(port);
@@ -44,6 +51,33 @@ io.on('connection', function (socket) {
         }
     });
 });
+
+//Mininal route handling.. Callback function is stored in routes
+app.get('/', (req, res) => {
+        // res.render('index');
+        // Tweet.getTweets(0, function(tweets) {
+        //     res.send(tweets);
+        // });
+    let search_term = '';
+    let tweets = ESH.ESSearch(elastic_client, io, search_term, (tweets) => {
+        console.log('route callback', tweets.length);
+        res.render('index', {
+            tweets: tweets
+        });
+    });
+});
+
+app.get('/search', (req, res) => {
+    let search_term = req.query.search_term || '';
+    let tweets = ESH.ESSearch(elastic_client, io, search_term, (tweets) => {
+        console.log('route callback', search_term, tweets.length);
+        res.json(tweets);
+    });
+});
+
+//setting location of static files, app has access now
+// console.log(__dirname);
+app.use('/', express.static(__dirname + "../public/"));
 
 //define stream api, bounding box, handler to process it and store in DB, etc
 let runStream = () => {
