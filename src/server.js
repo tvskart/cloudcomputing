@@ -21,7 +21,7 @@ app.engine('html', swig.renderFile);
 app.set('view engine', 'html');
 
 //connecting to mongoDB
-mongoose.connect('mongodb://localhost/react-tweets');
+// mongoose.connect('mongodb://localhost/react-tweets');
 
 const twit = new Twitter(config.twitter2);
 let stream = null;
