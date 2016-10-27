@@ -58,7 +58,7 @@ app.engine('html', _swig2.default.renderFile);
 app.set('view engine', 'html');
 
 //connecting to mongoDB
-_mongoose2.default.connect('mongodb://localhost/react-tweets');
+// mongoose.connect('mongodb://localhost/react-tweets');
 
 var twit = new _twitter2.default(_config2.default.twitter2);
 var stream = null;
